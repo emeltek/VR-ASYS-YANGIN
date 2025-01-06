@@ -1,19 +1,17 @@
-using System.Collections;
-using System.Collections.Generic;
 using DG.Tweening;
 using UnityEngine;
 public class FireSystem : MonoBehaviour
 {
     private ParticleSystem ps;
     public GameObject flameTarget;
-    public float shapeIncValue = 0.1f;
-    public float emissionIncValue = 0.1f;
+    public ParticleSystem sparks;
+    public ParticleSystem smoke;
+    public AudioSource fireSound;
     public float sizeIncValue = 0.01f;
  
     void Start()
     {
         ps = GetComponent<ParticleSystem>();
-        transform.position = new Vector3(25, 0.75f, 0);
         transform.DOMove(flameTarget.transform.position, 120);
     }
 
@@ -22,16 +20,31 @@ public class FireSystem : MonoBehaviour
         var shape = ps.shape;
         var emission = ps.emission;
         var main = ps.main;
-        shapeIncValue += 0.1f * Time.deltaTime;
-        emissionIncValue += 0.8f * Time.deltaTime;
+        var sparksEmission = sparks.emission;
+        var smokeMain = smoke.main;
+
+        // Boyut artýþý (maksimum deðer ile sýnýrla)
         if (sizeIncValue < 5)
         {
             sizeIncValue += 0.1f * Time.deltaTime;
             main.startSize = sizeIncValue;
         }
-        emission.rateOverTime = emissionIncValue;
-        shape.radius = shapeIncValue;
-        transform.position = Vector3.forward * 0.1f ;
+
+        // Sparks ve smoke artýþýný sýnýrla
+        float targetSparksRate = 50f; // Sabit hedef deðeri
+        sparksEmission.rateOverTime = Mathf.Lerp(sparksEmission.rateOverTime.constant, targetSparksRate, Time.deltaTime);
+
+        float targetSmokeSize = 3f; // Sabit hedef deðer
+        smokeMain.startSize = Mathf.Lerp(smokeMain.startSize.constant, targetSmokeSize, Time.deltaTime * 0.5f);
+
+        // Þekil yarýçapý artýþý (maksimum deðer ile sýnýrla)
+        float targetShapeRadius = 5f;
+        shape.radius = Mathf.Lerp(shape.radius, targetShapeRadius, Time.deltaTime * 0.1f);
+
+        // Emission hýzýný sýnýrla
+        float targetEmissionRate = 100f; // Sabit hedef deðer
+        emission.rateOverTime = Mathf.Lerp(emission.rateOverTime.constant, targetEmissionRate, Time.deltaTime * 0.1f);
     }
+
 
 }
