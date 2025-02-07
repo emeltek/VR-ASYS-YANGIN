@@ -1,50 +1,87 @@
-using DG.Tweening;
+using System.Collections;
+using System.Collections.Generic;
 using UnityEngine;
+
 public class FireSystem : MonoBehaviour
 {
-    private ParticleSystem ps;
-    public GameObject flameTarget;
-    public ParticleSystem sparks;
-    public ParticleSystem smoke;
-    public AudioSource fireSound;
-    public float sizeIncValue = 0.01f;
- 
+    public List<ParticleSystem> flameParticle;
+    public float growthRate = 2f;
+    private List<float> particleGrowths;
+    public List<ParticleSystem> wallFlames;
+    public List<ParticleSystem> treeFlames;
     void Start()
     {
-        ps = GetComponent<ParticleSystem>();
-        transform.DOMove(flameTarget.transform.position, 120);
+        // ParticleGrowths listesini oluþtur ve boyutunu particleSystems listesine göre ayarla
+        particleGrowths = new List<float>();
+        for (int i = 0; i < flameParticle.Count; i++)
+        {
+            particleGrowths.Add(0f); 
+        }
     }
 
     void Update()
     {
+        if (flameParticle[9].shape.radius > 5 && flameParticle[9].shape.radius < 5.2)
+        {
+            BurnTress();
+        }
+        if (flameParticle[3].shape.radius > 12)
+        {
+            for (int i = 4; i <= 9; i++)
+            {
+                GrowthParticle(i);
+            }
+        }
+        else if (flameParticle[0].shape.radius > 12)
+        {
+            for (int i = 1; i < 4; i++)
+            {
+                GrowthParticle(i);
+            }
+        }
+        else
+        {
+            GrowthParticle(0);
+        }
+    }
+
+    void GrowthParticle(int index)
+    {
+        ParticleSystem ps = flameParticle[index]; 
+
+        if (!ps.gameObject.activeInHierarchy)
+        {
+            ps.gameObject.SetActive(true);
+        }
+
         var shape = ps.shape;
         var emission = ps.emission;
         var main = ps.main;
-        var sparksEmission = sparks.emission;
-        var smokeMain = smoke.main;
-
-        // Boyut artýþý (maksimum deðer ile sýnýrla)
-        if (sizeIncValue < 5)
+        
+        particleGrowths[index] += growthRate * Time.deltaTime;
+        if (particleGrowths[index] < 5)
         {
-            sizeIncValue += 0.1f * Time.deltaTime;
-            main.startSize = sizeIncValue;
+            main.startSize = particleGrowths[index];
         }
-
-        // Sparks ve smoke artýþýný sýnýrla
-        float targetSparksRate = 50f; // Sabit hedef deðeri
-        sparksEmission.rateOverTime = Mathf.Lerp(sparksEmission.rateOverTime.constant, targetSparksRate, Time.deltaTime);
-
-        float targetSmokeSize = 3f; // Sabit hedef deðer
-        smokeMain.startSize = Mathf.Lerp(smokeMain.startSize.constant, targetSmokeSize, Time.deltaTime * 0.5f);
-
-        // Þekil yarýçapý artýþý (maksimum deðer ile sýnýrla)
-        float targetShapeRadius = 5f;
-        shape.radius = Mathf.Lerp(shape.radius, targetShapeRadius, Time.deltaTime * 0.1f);
-
-        // Emission hýzýný sýnýrla
-        float targetEmissionRate = 100f; // Sabit hedef deðer
-        emission.rateOverTime = Mathf.Lerp(emission.rateOverTime.constant, targetEmissionRate, Time.deltaTime * 0.1f);
+        shape.radius = particleGrowths[index] / 5;
+        if (index == 0)
+        {
+            emission.rateOverTime = particleGrowths[index]; 
+        }
     }
 
-
+    void BurnTress()
+    {
+        for (int i = 0; i < wallFlames.Count; i++)
+        {
+            if (!wallFlames[i].gameObject.activeInHierarchy)
+            {
+                wallFlames[i].gameObject.SetActive(true);
+            }
+            if (!treeFlames[i].gameObject.activeInHierarchy)
+            {
+                treeFlames[i].gameObject.SetActive(true);
+            }
+        }
+    }
 }
