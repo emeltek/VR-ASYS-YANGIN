@@ -3,6 +3,7 @@
     "com.meta.xr.sdk.all": "201.0.0",
     "com.unity.burst": "1.8.19",
     "com.unity.collab-proxy": "2.7.1",
+    "com.unity.device-simulator.devices": "1.0.1",
     "com.unity.editorcoroutines": "1.0.0",
     "com.unity.ext.nunit": "1.0.6",
     "com.unity.feature.development": "1.0.1",

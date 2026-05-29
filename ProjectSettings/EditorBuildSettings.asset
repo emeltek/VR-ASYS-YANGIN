@@ -6,8 +6,8 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
-    path: Assets/Scenes/VR-ASYS-YANGIN-SCENE.unity
-    guid: 89c100b5f6cb77048a09f82aaeac254a
+    path: Assets/Scenes/KurtarilanSahne.unity
+    guid: ee05ab23e94c3ce40a6af733de5abfc9
   m_configObjects:
     com.unity.xr.management.loader_settings: {fileID: 11400000, guid: c39cc2c0a7c50474e8efe6604e04f072, type: 2}
     com.unity.xr.openxr.settings4: {fileID: 11400000, guid: 14448b82e7eb6e54d8c23c1c7bee9612, type: 2}
