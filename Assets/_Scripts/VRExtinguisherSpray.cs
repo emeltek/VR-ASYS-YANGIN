@@ -4,8 +4,8 @@ public class VRExtinguisherSpray : MonoBehaviour
 {
     [Header("Referanslar")]
     public ParticleSystem sprayParticles; 
-    public AudioSource sprayAudio;        
-
+    public AudioSource sprayAudio;
+    public SphereCollider sparyCollider;
     [Header("Durum Kontrolleri (Editor Izleme Icýn)")]
     public bool isExtinguisherHeld = false;
     public bool isHoseHeld = false;
@@ -13,6 +13,7 @@ public class VRExtinguisherSpray : MonoBehaviour
 
     void Start()
     {
+        sparyCollider.enabled = false;
         if (sprayParticles != null)
         {
             sprayParticles.Stop();
@@ -53,11 +54,13 @@ public class VRExtinguisherSpray : MonoBehaviour
                 // ? ÝÞTE EKLEMEN GEREKEN HAPTIC SATIRI:
                 // Ýki kumandaya da sürekli hafif/orta þiddette bir titreþim gönderiyoruz
                 // (Frekans: 1f, Þiddet/Genlik: 0.3f, Hangi Kumanda: Sol ve Sað)
+                sparyCollider.enabled = true;
                 OVRInput.SetControllerVibration(1f, 0.3f, OVRInput.Controller.LTouch);
                 OVRInput.SetControllerVibration(1f, 0.3f, OVRInput.Controller.RTouch);
             }
             else
             {
+                sparyCollider.enabled = false;
                 if (isSpraying) StopSpray();
 
                 // ? Y tuþu býrakýldýðýnda veya eller boþa çýktýðýnda titreþimi KESMELERÝ ÝÇÝN SIFIRLIYORUZ:

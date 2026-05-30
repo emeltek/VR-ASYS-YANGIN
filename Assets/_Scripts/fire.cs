@@ -73,16 +73,14 @@ public class ScaleOverTimeAndSpawnFires : MonoBehaviour
 
     void Update()
     {
-        // ? Eðer butona basýlmadýysa, update içindeki büyüme mantýðý çalýþmasýn:
-        if (!isYanginBasladi) return; 
-        // ? YENÝ KONTROL: Eðer o an söndürülüyorsa, BÜYÜME mantýðýný tamamen atla!
+        if (!isYanginBasladi) return;
+
+        // ? Emniyet Kilidi: Söndürme iþlemi esnasýnda büyüme hesaplamasýný atla!
         if (isExtinguishing) 
         {
-            // Her frame'de kontrol sýfýrlanacak, eðer çarpýþma biterse otomatik false olacak
             isExtinguishing = false; 
             return; 
         }
-        
         Vector3 current = Object.transform.localScale;
         float delta = scaleSpeed * Time.deltaTime;
 
