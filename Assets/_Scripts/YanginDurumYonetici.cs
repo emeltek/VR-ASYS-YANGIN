@@ -4,21 +4,24 @@ public class YanginDurumYonetici : MonoBehaviour
 {
     public static YanginDurumYonetici Instance;
 
-    [Header("Kontrolden Çýkma Eþikleri")]
-    [Tooltip("Sahnede ayný anda bulunabilecek maksimum aktif ateþ odaðý sayýsý. Bunu aþarsa yangýn kontrolden çýkar.")]
+    [Header("Kontrolden Çýkma Eþiði")]
     public int maxFireCountThreshold = 15;
 
     [Header("Referanslar")]
-    public SceneManager simulasyonYonetici; // Daha önce yazdýðýmýz yönetici
+    public SceneManager simulasyonYonetici;
+
+    [Header("Oyun Sonu Ayarlarý (? YENÝ)")]
+    [Tooltip("Simülasyon iyi veya kötü bittiðinde AKTÝF (True) yapýlacak olan Game Object (Örn: Sonuç Paneli).")]
+    public GameObject oyunSonuPaneli;
 
     [Header("Sesli Alarm Ayarlarý")]
-    [Tooltip("Yangýn kontrolden çýktýðýnda çalacak siren veya 'Tahliye Edin' ses kaynaðý.")]
     public AudioSource sirenAudioSource;
     public AudioClip evacuationClip;
 
     private bool isKontroldenCikti = false;
+    private bool isOyunBitti = false; // ? Çift tetiklenmeyi önlemek için kilit
     private float checkTimer = 0f;
-    private float checkInterval = 1f; // Her saniye kontrol et (Performans dostu)
+    private float checkInterval = 1f;
 
     void Awake()
     {
@@ -27,9 +30,9 @@ public class YanginDurumYonetici : MonoBehaviour
 
     void Update()
     {
-        // Eðer simülasyon henüz baþlamadýysa veya yangýn zaten kontrolden çýktýysa hesaplama yapma
+        // Simülasyon baþlamadýysa veya zaten bittiyse kontrol etme
         if (simulasyonYonetici != null && !simulasyonYonetici.anaYanginScripti.isYanginBasladi) return;
-        if (isKontroldenCikti) return;
+        if (isOyunBitti) return;
 
         checkTimer += Time.deltaTime;
         if (checkTimer >= checkInterval)
@@ -41,14 +44,19 @@ public class YanginDurumYonetici : MonoBehaviour
 
     void ControlEt()
     {
-        // 1) Sahnede o an "fire" tag'ine sahip kaç tane obje olduðunu sayýyoruz
-        GameObject[] aktifAteþler = GameObject.FindGameObjectsWithTag("fire");
-        int mevcutAtesSayisi = aktifAteþler.Length;
+        GameObject[] aktifAtesler = GameObject.FindGameObjectsWithTag("fire");
+        int mevcutAtesSayisi = aktifAtesler.Length;
 
-        Debug.Log($"[YANGIN DURUMU] Aktif Ateþ Odaðý Sayýsý: {mevcutAtesSayisi} / {maxFireCountThreshold}");
+        // --- ? DURUM 1: ÝYÝ BÝTÝÞ (Tüm yangýnlar söndürüldü) ---
+        // Eðer ilk nesil doðduktan sonra sahnede hiç ateþ kalmadýysa oyuncu kazanmýþtýr
+        if (mevcutAtesSayisi == 0)
+        {
+            SimulasyonuBitir(true, "Tebrikler! Yangýný tamamen söndürdünüz.");
+            return;
+        }
 
-        // 2) Eðer mevcut ateþ sayýsý, belirlediðimiz tehlike sýnýrýný geçtiyse:
-        if (mevcutAtesSayisi >= maxFireCountThreshold)
+        // --- ? DURUM 2: KONTROLDEN ÇIKMA BAÞLANGICI ---
+        if (!isKontroldenCikti && mevcutAtesSayisi >= maxFireCountThreshold)
         {
             YanginKontroldenCikti();
         }
@@ -57,32 +65,48 @@ public class YanginDurumYonetici : MonoBehaviour
     void YanginKontroldenCikti()
     {
         isKontroldenCikti = true;
-        Debug.LogError("[KRÝTÝK DURUM] YANGIN KONTROLDEN ÇIKTI! DERHAL TAHLÝYE EDÝN!");
+        Debug.LogError("[KRÝTÝK] Yangýn kontrolden çýktý!");
 
-        // 1. Yeni ateþ doðmasýný engellemek için nesil limitini sýfýra çekiyoruz
         if (simulasyonYonetici != null && simulasyonYonetici.anaYanginScripti != null)
         {
             simulasyonYonetici.anaYanginScripti.maxFireGeneration = 0;
         }
 
-        // 2. Acil Durum Sireni ve "Tahliye Edin" Sesli Uyarýsýný Tetikle
         if (sirenAudioSource != null && evacuationClip != null)
         {
             if (!sirenAudioSource.isPlaying)
             {
-                sirenAudioSource.loop = true; // Sireni sürekli çal
+                sirenAudioSource.loop = true;
                 sirenAudioSource.clip = evacuationClip;
                 sirenAudioSource.Play();
             }
         }
-
-        // 3. VR Oyuncusuna Görev Ver
-        // Burada arayüze (UI) "YANGIN KONTROLDEN ÇIKTI! GÜVENLÝ BÖLGEYE KAÇIN!" yazdýrabilirsin.
-        TriggerEvacuationUI();
+        
+        // Not: Burada oyun hemen BÝTMÝYOR. Oyuncunun güvenli bölgeye kaçmasýný bekliyoruz!
     }
 
-    void TriggerEvacuationUI()
+    /// <summary>
+    /// ? ÝYÝ veya KÖTÜ senaryo bittiðinde çaðrýlan MERKEZÝ FONKSÝYON
+    /// </summary>
+    public void SimulasyonuBitir(bool iyiBitisMi, string bitisMesaji)
     {
-        // VR ekranýnda yanýp sönen kýrmýzý bir "EVACUATE / TAHLÝYE" uyarýsý tetiklemek için harika bir yer
+        if (isOyunBitti) return; // Eðer zaten bittiyse bir daha çalýþma
+        isOyunBitti = true;
+
+        Debug.Log($"[SÝMÜLASYON BÝTTÝ] Sonuç: {(iyiBitisMi ? "BAÞARILI" : "BAÞARISIZ")} | Mesaj: {bitisMesaji}");
+
+        // 1) ? ÝSTEDÝÐÝN NESNEYÝ TRUE YAPMA ANI:
+        if (oyunSonuPaneli != null)
+        {
+            oyunSonuPaneli.SetActive(true);
+        }
+
+        // 2) Eðer siren çalýyorsa durdur
+        if (sirenAudioSource != null && sirenAudioSource.isPlaying)
+        {
+            sirenAudioSource.Stop();
+        }
+
+        // Opsiyonel: Buraya skor hesaplama veya VR ellerini kilitleme kodlarý gelebilir.
     }
 }
