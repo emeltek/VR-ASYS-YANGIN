@@ -3,60 +3,76 @@ using UnityEngine;
 public class FireWaterCollision : MonoBehaviour
 {
     [Header("Söndürme Ayarlarý")]
-    [Tooltip("Ateþin saniyede ne kadar küçüleceðini belirler. Deðer büyürse ateþ daha hýzlý söner.")]
-    public float extinguishSpeed = 0.4f; 
+    [Tooltip("Ateþin saniyede ne kadar küçüleceðini belirler.")]
+    public float extinguishSpeed = 0.4f;
 
-    [Tooltip("Ateþ bu ölçeðin altýna düþtüðünde tamamen sönmüþ sayýlýr.")]
-    public float destroyThreshold = 0.15f;
+    [Tooltip("Ateþ bu ölçeðin altýna düþtüðünde tamamen sönmüþ sayýlýr ve yok edilir.")]
+    public float destroyThreshold = 0.2f;
 
-    // YÖNTEM 1: Eðer hortumun ucuna koyduðun görünmez Collider (isTrigger açýk) ateþe deðerse
+    [Header("Görsel Efekt Ayarlarý (Yeni)")]
+    [Tooltip("Ateþ söndürülürken çýkacak olan BEYAZ parçacýk efekti (Prefab).")]
+    public GameObject whiteExtinguishParticlePrefab;
+
+    [Tooltip("Beyaz efektin kaç saniyede bir doðacaðýný belirler (Sürekli doðup kasmamasý için).")]
+    public float particleSpawnInterval = 0.15f;
+    private float nextSpawnTime = 0f;
+
+    /// <summary>
+    /// Hortumun ucundaki görünmez tetikleyici (isTrigger=True) ateþe deðdiði sürece çalýþýr.
+    /// </summary>
     private void OnTriggerStay(Collider other)
     {
-        // Çarptýðýmýz nesnenin tag'i "fire" ise (küçük ateþler veya ana ateþ)
         if (other.CompareTag("fire"))
         {
-            Extinguish(other.gameObject);
-        }
-    }
+            // ? YENÝ: Çarptýðýmýz ateþin üzerindeki büyüme script'ini buluyoruz
+            ScaleOverTimeAndSpawnFires fireScript = other.GetComponent<ScaleOverTimeAndSpawnFires>();
+        
+            if (fireScript != null)
+            {
+                // Ateþe "büyümeyi durdur, þu an seni söndürüyorum" talimatý veriyoruz
+                fireScript.isExtinguishing = true;
+            }
 
-    // YÖNTEM 2: Eðer Particle System'ýn kendi "Collision" modunu kullanýyorsan (Parçacýklar ateþe çarptýðýnda)
-    private void OnParticleCollision(GameObject other)
-    {
-        if (other.CompareTag("fire"))
-        {
-            Extinguish(other);
+            // 1. Ateþi Söndürme Mantýðý (Küçültme)
+            Extinguish(other.gameObject);
+
+            // 2. Beyaz Parçacýk Efekti Tetikleme
+            if (whiteExtinguishParticlePrefab != null && Time.time >= nextSpawnTime)
+            {
+                nextSpawnTime = Time.time + particleSpawnInterval;
+                Vector3 spawnPosition = other.transform.position + Vector3.up * 0.3f; 
+                GameObject whiteCloud = Instantiate(whiteExtinguishParticlePrefab, spawnPosition, Quaternion.identity);
+                Destroy(whiteCloud, 1.5f);
+            }
         }
     }
 
     /// <summary>
-    /// Ateþ nesnesini zamana baðlý olarak küçültür ve söndürür.
+    /// Ateþ nesnesini yavaþ yavaþ küçültür ve sýnýrýn altýna inince yok eder.
     /// </summary>
     private void Extinguish(GameObject fireObject)
     {
-        if (fireObject == null) return;
-
-        // Ateþin mevcut ölçeðini yavaþça azaltýyoruz
+        // Ateþin o anki yerel ölçeðini al
         Vector3 currentScale = fireObject.transform.localScale;
-        float reduction = extinguishSpeed * Time.deltaTime;
 
-        currentScale.x -= reduction;
-        currentScale.y -= reduction;
-        currentScale.z -= reduction;
+        // Her üç eksende de belirlenen hýzda küçült
+        currentScale.x -= extinguishSpeed * Time.deltaTime;
+        currentScale.y -= extinguishSpeed * Time.deltaTime;
+        currentScale.z -= extinguishSpeed * Time.deltaTime;
 
-        // Ateþin eksi deðerlere düþmesini engellemek için sýnýrlýyoruz
-        fireObject.transform.localScale = new Vector3(
-            Mathf.Max(currentScale.x, 0f),
-            Mathf.Max(currentScale.y, 0f),
-            Mathf.Max(currentScale.z, 0f)
-        );
+        // Ölçeðin eksi deðerlere düþmesini engelle
+        currentScale.x = Mathf.Max(currentScale.x, 0f);
+        currentScale.y = Mathf.Max(currentScale.y, 0f);
+        currentScale.z = Mathf.Max(currentScale.z, 0f);
 
-        // Eðer ateþ belirlenen eþik deðerinden daha fazla küçüldüyse (Söndüyse)
-        if (fireObject.transform.localScale.x <= destroyThreshold)
+        // Yeni ölçeði ateþe geri ata
+        fireObject.transform.localScale = currentScale;
+
+        // Eðer ateþ belirlenen eþik deðerinden daha fazla küçüldüyse, yangýn sönmüþtür!
+        if (currentScale.x <= destroyThreshold)
         {
-            // Sönme anýnda istersen buraya bir "týslama" ses efekti veya su buharý dumaný ekleyebilirsin.
-            
+            Debug.Log("[YANGIN SÖNDÜ] Bir ateþ odaðý baþarýyla etkisiz hale getirildi.");
             Destroy(fireObject);
-            Debug.Log($"[Yangýn Sistemi] Bir adet '{fireObject.name}' baþarýyla söndürüldü.");
         }
     }
 }

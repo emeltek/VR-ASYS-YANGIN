@@ -46,14 +46,23 @@ public class VRExtinguisherSpray : MonoBehaviour
                 shouldSpray = true;
             }
 
-            // AKSIYON ZAMANI: Canlý sorgu sonucuna göre aç veya kapat
             if (shouldSpray)
             {
                 if (!isSpraying) StartSpray();
+
+                // ? ÝÞTE EKLEMEN GEREKEN HAPTIC SATIRI:
+                // Ýki kumandaya da sürekli hafif/orta þiddette bir titreþim gönderiyoruz
+                // (Frekans: 1f, Þiddet/Genlik: 0.3f, Hangi Kumanda: Sol ve Sað)
+                OVRInput.SetControllerVibration(1f, 0.3f, OVRInput.Controller.LTouch);
+                OVRInput.SetControllerVibration(1f, 0.3f, OVRInput.Controller.RTouch);
             }
             else
             {
                 if (isSpraying) StopSpray();
+
+                // ? Y tuþu býrakýldýðýnda veya eller boþa çýktýðýnda titreþimi KESMELERÝ ÝÇÝN SIFIRLIYORUZ:
+                OVRInput.SetControllerVibration(0f, 0f, OVRInput.Controller.LTouch);
+                OVRInput.SetControllerVibration(0f, 0f, OVRInput.Controller.RTouch);
             }
         }
         else
