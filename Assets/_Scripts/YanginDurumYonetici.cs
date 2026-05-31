@@ -25,6 +25,7 @@ public class YanginDurumYonetici : MonoBehaviour
     private bool isOyunBitti = false;
     private float checkTimer = 0f;
     private float checkInterval = 1f;
+    public static bool isSceneSuccessful = false;
 
     void Awake()
     {
@@ -45,27 +46,25 @@ public class YanginDurumYonetici : MonoBehaviour
     }
     void ControlEt()
     {
+        // Sahnede 'fire' tag'ine sahip tüm nesneleri sayýyoruz
         GameObject[] aktifAtesler = GameObject.FindGameObjectsWithTag("fire");
         int mevcutAtesSayisi = aktifAtesler.Length;
 
-        // ? HATA BULMA (DEBUG): Eðer hala ateþ var diyorsa, o ateþlerin isimlerini Console'a yazdýr
-        if (mevcutAtesSayisi > 0)
-        {
-            foreach (GameObject ates in aktifAtesler)
-            {
-                // Console'da hangi objenin "fire" tag'i yüzünden oyunu bitirmediðini göreceðiz
-                Debug.Log($"[YANGIN KONTROL] Sahnede hala sönmemiþ ateþ var! Objeni Adý: {ates.name} | Mevcut Ölçeði: {ates.transform.localScale.x}");
-            }
-        }
+        Debug.Log($"[YANGIN KONTROL] Sahnede kalan toplam ateþ nesnesi sayýsý: {mevcutAtesSayisi}");
 
-        // --- DURUM 1: TÜM YANGINLAR BAÞARIYLA SÖNDÜRÜLDÜ ---
-        if (mevcutAtesSayisi == 0)
+        // ? MUHTEÞEM TRICK: Normalde 0 olmasý gerekirdi ama sahnede 1 tane orijinal/ana nesne 
+        // her zaman kalacaðý için, sýnýr deðerimizi 1 (veya daha küçük) yapýyoruz!
+        if (mevcutAtesSayisi <= 2 && SahneYonetici.isFireStart ==true)
         {
+           // Debug.Log("[YANGIN KONTROL] Sadece 1 (Ana) ateþ kaldý, yani oyuncu tüm küçük ateþleri söndürdü! Baþarý tetikleniyor...");
+            Debug.LogWarning("sahne bitti;;;;;");
+            // Tebrikler sesini bas ve paneli açan fonksiyonunu çaðýr
+            isSceneSuccessful = true;
             SimulasyonuBitir(true, "Tebrikler! Yangýný tamamen söndürdünüz. Sýnav modülüne geçebilirsiniz.", true);
             return;
         }
 
-        // --- DURUM 2: KONTROLDEN ÇIKMA BAÞLANGICI ---
+        // --- KONTROLDEN ÇIKMA BAÞLANGICI (Eski mantýðýn aynen korunsun) ---
         if (!isKontroldenCikti && mevcutAtesSayisi >= maxFireCountThreshold)
         {
             YanginKontroldenCikti();

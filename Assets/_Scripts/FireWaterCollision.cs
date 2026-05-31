@@ -31,7 +31,15 @@ public class FireWaterCollision : MonoBehaviour
            
         }
     }
-
+    private void OnTriggerExit(Collider other)
+    {
+        if (other.CompareTag("fire"))
+        {
+            ScaleOverTimeAndSpawnFires fireScript = other.GetComponent<ScaleOverTimeAndSpawnFires>();
+            if (fireScript != null)
+                fireScript.isExtinguishing = false;
+        }
+    }
     private void OnTriggerStay(Collider other)
     {
         if (other.CompareTag("fire"))

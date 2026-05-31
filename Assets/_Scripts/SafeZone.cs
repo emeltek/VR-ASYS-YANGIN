@@ -30,8 +30,12 @@ public class SafeZone : MonoBehaviour
                 }
                 else
                 {
-                    audio.PlayOneShot(failEarlyFire);
+                    if (YanginDurumYonetici.isSceneSuccessful == false)
+                    {                    audio.PlayOneShot(failEarlyFire);
 
+                        
+                    }
+    
                     YanginDurumYonetici.Instance.SimulasyonuBitir(false, "Başarısız! Yangın hala söndürülebilirdi, alanı erken terk ettiniz.");
                 }
             }
