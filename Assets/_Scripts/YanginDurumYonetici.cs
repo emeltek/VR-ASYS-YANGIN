@@ -8,7 +8,7 @@ public class YanginDurumYonetici : MonoBehaviour
     public int maxFireCountThreshold = 15;
 
     [Header("Referanslar")]
-    public SceneManager simulasyonYonetici;
+    public SahneYonetici simulasyonYonetici;
 
     [Header("Oyun Sonu Ayarlarý (? YENÝ)")]
     [Tooltip("Simülasyon iyi veya kötü bittiðinde AKTÝF (True) yapýlacak olan Game Object (Örn: Sonuç Paneli).")]

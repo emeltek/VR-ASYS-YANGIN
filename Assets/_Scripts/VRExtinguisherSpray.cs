@@ -10,6 +10,8 @@ public class VRExtinguisherSpray : MonoBehaviour
     public bool isExtinguisherHeld = false;
     public bool isHoseHeld = false;
     public bool isSpraying = false;
+    [Header("Pim Kontrolü (Yeni)")]
+    [HideInInspector] public bool isPinPulledSuccessfully = false; // Pim çekildi mi?
 
     void Start()
     {
@@ -30,7 +32,7 @@ public class VRExtinguisherSpray : MonoBehaviour
     void Update()
     {
         // ÞART 1: Ýki elin de nesneleri sýkýca tutuyor olmasý gerekiyor
-        if (isExtinguisherHeld && isHoseHeld)
+        if (isExtinguisherHeld && isHoseHeld &&  isPinPulledSuccessfully)
         {
             bool shouldSpray = false;
 
@@ -49,7 +51,7 @@ public class VRExtinguisherSpray : MonoBehaviour
 
             if (shouldSpray)
             {
-                if (!isSpraying) StartSpray();
+                if (!isSpraying && SahneYonetici.isFireStart == true) StartSpray();
 
                 // ? ÝÞTE EKLEMEN GEREKEN HAPTIC SATIRI:
                 // Ýki kumandaya da sürekli hafif/orta þiddette bir titreþim gönderiyoruz
