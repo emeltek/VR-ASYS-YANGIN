@@ -8,18 +8,21 @@ public class YanginDurumYonetici : MonoBehaviour
     public int maxFireCountThreshold = 15;
 
     [Header("Referanslar")]
-    public SahneYonetici simulasyonYonetici;
+    public SahneYonetici sahneYonetici; // SahneYonetici'ye eriþtik
 
-    [Header("Oyun Sonu Ayarlarý (? YENÝ)")]
-    [Tooltip("Simülasyon iyi veya kötü bittiðinde AKTÝF (True) yapýlacak olan Game Object (Örn: Sonuç Paneli).")]
+    [Header("Oyun Sonu Paneli")]
     public GameObject oyunSonuPaneli;
 
-    [Header("Sesli Alarm Ayarlarý")]
+    [Header("Sesli Alarm & Uyarý Ayarlarý")]
     public AudioSource sirenAudioSource;
     public AudioClip evacuationClip;
+    
+    // ? YENÝ EKLEME: Tüm yangýnlar bittiðinde çalacak baþarý ses kaydý
+    [Tooltip("Tebrikler yangýný söndürdünüz, sýnav modülüne geçebilirsiniz ses klibi.")]
+    public AudioClip fireSuccessClip; 
 
     private bool isKontroldenCikti = false;
-    private bool isOyunBitti = false; // ? Çift tetiklenmeyi önlemek için kilit
+    private bool isOyunBitti = false;
     private float checkTimer = 0f;
     private float checkInterval = 1f;
 
@@ -30,8 +33,7 @@ public class YanginDurumYonetici : MonoBehaviour
 
     void Update()
     {
-        // Simülasyon baþlamadýysa veya zaten bittiyse kontrol etme
-        if (simulasyonYonetici != null && !simulasyonYonetici.anaYanginScripti.isYanginBasladi) return;
+        if (sahneYonetici != null && !SahneYonetici.isFireStart) return;
         if (isOyunBitti) return;
 
         checkTimer += Time.deltaTime;
@@ -41,21 +43,29 @@ public class YanginDurumYonetici : MonoBehaviour
             ControlEt();
         }
     }
-
     void ControlEt()
     {
         GameObject[] aktifAtesler = GameObject.FindGameObjectsWithTag("fire");
         int mevcutAtesSayisi = aktifAtesler.Length;
 
-        // --- ? DURUM 1: ÝYÝ BÝTÝÞ (Tüm yangýnlar söndürüldü) ---
-        // Eðer ilk nesil doðduktan sonra sahnede hiç ateþ kalmadýysa oyuncu kazanmýþtýr
+        // ? HATA BULMA (DEBUG): Eðer hala ateþ var diyorsa, o ateþlerin isimlerini Console'a yazdýr
+        if (mevcutAtesSayisi > 0)
+        {
+            foreach (GameObject ates in aktifAtesler)
+            {
+                // Console'da hangi objenin "fire" tag'i yüzünden oyunu bitirmediðini göreceðiz
+                Debug.Log($"[YANGIN KONTROL] Sahnede hala sönmemiþ ateþ var! Objeni Adý: {ates.name} | Mevcut Ölçeði: {ates.transform.localScale.x}");
+            }
+        }
+
+        // --- DURUM 1: TÜM YANGINLAR BAÞARIYLA SÖNDÜRÜLDÜ ---
         if (mevcutAtesSayisi == 0)
         {
-            SimulasyonuBitir(true, "Tebrikler! Yangýný tamamen söndürdünüz.");
+            SimulasyonuBitir(true, "Tebrikler! Yangýný tamamen söndürdünüz. Sýnav modülüne geçebilirsiniz.", true);
             return;
         }
 
-        // --- ? DURUM 2: KONTROLDEN ÇIKMA BAÞLANGICI ---
+        // --- DURUM 2: KONTROLDEN ÇIKMA BAÞLANGICI ---
         if (!isKontroldenCikti && mevcutAtesSayisi >= maxFireCountThreshold)
         {
             YanginKontroldenCikti();
@@ -65,13 +75,6 @@ public class YanginDurumYonetici : MonoBehaviour
     void YanginKontroldenCikti()
     {
         isKontroldenCikti = true;
-        Debug.LogError("[KRÝTÝK] Yangýn kontrolden çýktý!");
-
-        if (simulasyonYonetici != null && simulasyonYonetici.anaYanginScripti != null)
-        {
-            simulasyonYonetici.anaYanginScripti.maxFireGeneration = 0;
-        }
-
         if (sirenAudioSource != null && evacuationClip != null)
         {
             if (!sirenAudioSource.isPlaying)
@@ -81,32 +84,30 @@ public class YanginDurumYonetici : MonoBehaviour
                 sirenAudioSource.Play();
             }
         }
-        
-        // Not: Burada oyun hemen BÝTMÝYOR. Oyuncunun güvenli bölgeye kaçmasýný bekliyoruz!
     }
 
-    /// <summary>
-    /// ? ÝYÝ veya KÖTÜ senaryo bittiðinde çaðrýlan MERKEZÝ FONKSÝYON
-    /// </summary>
-    public void SimulasyonuBitir(bool iyiBitisMi, string bitisMesaji)
+    // ? Fonksiyon parametresine 'isSonduruldu' kontrolü ekledik
+    public void SimulasyonuBitir(bool iyiBitisMi, string bitisMesaji, bool isSonduruldu = false)
     {
-        if (isOyunBitti) return; // Eðer zaten bittiyse bir daha çalýþma
+        if (isOyunBitti) return;
         isOyunBitti = true;
 
-        Debug.Log($"[SÝMÜLASYON BÝTTÝ] Sonuç: {(iyiBitisMi ? "BAÞARILI" : "BAÞARISIZ")} | Mesaj: {bitisMesaji}");
+        Debug.Log($"[SAHNE BÝTTÝ] {bitisMesaji}");
 
-        // 1) ? ÝSTEDÝÐÝN NESNEYÝ TRUE YAPMA ANI:
         if (oyunSonuPaneli != null)
         {
             oyunSonuPaneli.SetActive(true);
         }
 
-        // 2) Eðer siren çalýyorsa durdur
         if (sirenAudioSource != null && sirenAudioSource.isPlaying)
         {
             sirenAudioSource.Stop();
         }
 
-        // Opsiyonel: Buraya skor hesaplama veya VR ellerini kilitleme kodlarý gelebilir.
+        // ? YENÝ: Eðer yangýn baþarýyla söndürülerek bittiyse baþarý anonsunu çal
+        if (isSonduruldu && sirenAudioSource != null && fireSuccessClip != null)
+        {
+            sirenAudioSource.PlayOneShot(fireSuccessClip);
+        }
     }
 }

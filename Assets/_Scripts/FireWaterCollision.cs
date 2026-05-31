@@ -3,38 +3,47 @@ using UnityEngine;
 public class FireWaterCollision : MonoBehaviour
 {
     [Header("Söndürme Hýz Ayarlarý")]
-    [Tooltip("Ateþin saniyede ne kadar hýzlý küçüleceðini belirler. Deðer büyürse daha hýzlý söner.")]
-    public float extinguishSpeed = 1.5f; // Hýzlandýrýldý! (Eski deðer 0.4f idi)
-
-    [Tooltip("Ateþ bu ölçeðin altýna düþtüðünde tamamen sönmüþ sayýlýr ve yok edilir.")]
+    public float extinguishSpeed = 1.5f;
     public float destroyThreshold = 0.15f;
 
     [Header("Görsel Efekt Ayarlarý")]
-    [Tooltip("Ateþ söndürülürken çýkacak olan BEYAZ parçacýk efekti (Prefab).")]
     public GameObject whiteExtinguishParticlePrefab;
-
-    [Tooltip("Beyaz efektin kaç saniyede bir doðacaðýný belirler.")]
-    public float particleSpawnInterval = 0.12f; // Efekt sýklýðý da hýzla uyumlu hale getirildi
+    public float particleSpawnInterval = 0.12f;
     private float nextSpawnTime = 0f;
 
-    /// <summary>
-    /// Hortum ateþe deðdiði sürece her frame çalýþýr.
-    /// </summary>
+    // Merkezi ses kontrolü için statik zamanlayýcýlar (Tüm ateþler bu zamaný ortak kullanýr)
+    private static float globalNextWarningTime = 0f;
+    private static float globalWarningCooldown = 10f; // ? 10 Saniyelik Kesin Fren
+
+    private void OnTriggerEnter(Collider other)
+    {
+        // ? Giren nesne oyuncu ise VE küresel olarak 10 saniyelik bekleme süresi dolduysa:
+        if (other.CompareTag("Player") && Time.time >= globalNextWarningTime)
+        {
+            // Gelecekteki 10 saniyeyi kilitliyoruz
+            globalNextWarningTime = Time.time + globalWarningCooldown;
+            Debug.LogWarning("[ÝSG UYARI] Oyuncu ateþe çok yaklaþtý! 10 saniye boyunca bu uyarý tekrar çalmayacak.");
+
+            // Sesi çalmasý için sahnedeki merkezi yöneticiden (WindPositionChecker'daki AudioSource'u kullanabiliriz) ses tetikliyoruz
+            AudioSource merkeziSes = other.GetComponentInChildren<AudioSource>();
+            
+            
+           
+        }
+    }
+
     private void OnTriggerStay(Collider other)
     {
         if (other.CompareTag("fire"))
         {
-            // 1) Ateþin büyüme script'ini bul ve o anki frame için büyümeyi dondur
             ScaleOverTimeAndSpawnFires fireScript = other.GetComponent<ScaleOverTimeAndSpawnFires>();
             if (fireScript != null)
             {
                 fireScript.isExtinguishing = true;
             }
 
-            // 2) Ateþi hýzlýca küçült
             Extinguish(other.gameObject);
 
-            // 3) Beyaz parçacýk efektini doður
             if (whiteExtinguishParticlePrefab != null && Time.time >= nextSpawnTime)
             {
                 nextSpawnTime = Time.time + particleSpawnInterval;
@@ -49,7 +58,6 @@ public class FireWaterCollision : MonoBehaviour
     {
         Vector3 currentScale = fireObject.transform.localScale;
 
-        // Belirlenen yüksek hýzda küçültme iþlemi
         currentScale.x -= extinguishSpeed * Time.deltaTime;
         currentScale.y -= extinguishSpeed * Time.deltaTime;
         currentScale.z -= extinguishSpeed * Time.deltaTime;
@@ -60,10 +68,8 @@ public class FireWaterCollision : MonoBehaviour
 
         fireObject.transform.localScale = currentScale;
 
-        // Eþik deðerinin altýna indiði an tamamen yok et
         if (currentScale.x <= destroyThreshold)
         {
-            Debug.Log("[YANGIN SÖNDÜ] Bir ateþ odaðý hýzlýca söndürüldü.");
             Destroy(fireObject);
         }
     }

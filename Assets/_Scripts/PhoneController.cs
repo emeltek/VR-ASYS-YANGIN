@@ -9,7 +9,7 @@ public class PhoneController : MonoBehaviour
 
    private void OnTriggerEnter(Collider other)
    {
-      if (other.CompareTag("Player"))
+      if (other.CompareTag("Head"))
       {
          audio.Play();
          gameObject.SetActive(false);

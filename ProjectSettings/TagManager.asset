@@ -6,6 +6,11 @@ TagManager:
   tags:
   - Grass
   - Tree
+  - water
+  - terrain
+  - QDSUIBackplateGradient
+  - fire
+  - Head
   layers:
   - Default
   - TransparentFX
