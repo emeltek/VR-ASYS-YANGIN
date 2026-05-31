@@ -8,7 +8,7 @@ public class ScaleOverTimeAndSpawnFires : MonoBehaviour
     public GameObject Object;
 
     [Header("Büyüme Ayarlarý")]
-    public float scaleSpeed = 0.05f; // Hýzý biraz düþürmek kontrolü artýrýr
+    public float scaleSpeed = 0.05f; 
     public float maxScaleX = 2.0f;
     public float maxScaleZ = 2.0f;
     public float maxScaleY = 1.2f;
@@ -18,33 +18,33 @@ public class ScaleOverTimeAndSpawnFires : MonoBehaviour
 
     [Header("Küçük Ateþ Prefab Ayarlarý")]
     public GameObject[] smallFirePrefabs;
-    public int numberOfSmallFires = 3; // Tek seferde çok fazla doðup kasmamasý için 3'e düþürüldü
+    public int numberOfSmallFires = 3; 
     public float spawnRadius = 4f;
     
-    [Tooltip("Ateþlerin spawn olma dalgalarý arasýndaki bekleme süresi (Saniye). Kontrol için bunu artýrýn.")]
-    public float spawnDelay = 3f; // 1'den 3 saniyeye çýkarýldý (Yavaþlatma Etkisi 1)
+    [Tooltip("Ateþlerin spawn olma dalgalarý arasýndaki bekleme süresi (Saniye).")]
+    public float spawnDelay = 3f; 
 
     [Header("Zamanlama Ayarlarý")]
     public float fadeInTime = 2f;
     public float growthTime = 5f;
-    public float smallFireGrowthTime = 12f; // Küçük ateþlerin olgunlaþma süresi uzatýldý (Yavaþlatma Etkisi 2)
+    public float smallFireGrowthTime = 12f; 
 
     [Header("Küçük Ateþ Büyüme Hýzý ve Maks Ölçek")]
-    public float smallFireGrowthSpeed = 0.5f; // Büyüme hýzý yarýya düþürüldü
+    public float smallFireGrowthSpeed = 0.5f; 
     public float smallFireMaxScaleX = 1.0f;
     public float smallFireMaxScaleY = 0.8f;
     public float smallFireMaxScaleZ = 1.0f;
 
     [Header("Spawn Eþiði ve Nesil Limitleri")]
-    [Range(0.0f, 1.0f)] public float spawnThresholdPercentage = 0.85f; // Daha geç doðum yapmasý için eþik yükseltildi
+    [Range(0.0f, 1.0f)] public float spawnThresholdPercentage = 0.85f; 
     public int maxFireGeneration = 3;
 
     [Header("Rüzgar ve Yok Olma")]
     public Vector3 windDirection = new Vector3(1, 0, 0);
     [Range(0.0f, 1.0f)] public float destroyProbability = 0.5f;
 
-    [Tooltip("Ateþlerin rüzgar yönünden ne kadar sapabileceðini belirler. (0 = Tam rüzgar oku yönü, 1 = Tamamen serbest)")]
-    [Range(0f, 1f)] public float windSpreadingCone = 0.2f; // Sadece rüzgar yönü için dar bir koni
+    [Tooltip("Ateþlerin rüzgar yönünden ne kadar sapabileceðini belirler.")]
+    [Range(0f, 1f)] public float windSpreadingCone = 0.2f; 
 
     [Header("Küçük Ateþ Collider Ayarlarý")]
     public Vector3 smallFireColliderSize = new Vector3(1f, 0.5f, 1f);
@@ -54,9 +54,10 @@ public class ScaleOverTimeAndSpawnFires : MonoBehaviour
 
     private Vector3 initialScale;
     private bool hasSpawnedFirstGeneration = false;
+    
     [Header("Sistem Kontrolü")]
-    public bool isYanginBasladi = false; // Yangýn kontrol kilidi
-    [HideInInspector] public bool isExtinguishing = false; // Söndürülme aþamasýnda mý?
+    public bool isYanginBasladi = false; 
+    [HideInInspector] public bool isExtinguishing = false; 
 
     void Awake()
     {
@@ -68,19 +69,21 @@ public class ScaleOverTimeAndSpawnFires : MonoBehaviour
 
     void Start()
     {
-        initialScale = Object.transform.localScale;
+        if(Object != null)
+            initialScale = Object.transform.localScale;
     }
 
     void Update()
     {
-        if (!isYanginBasladi) return;
+        // ? Emniyet Kilidi 1: Obje imha edildiyse veya yangýn baþlamadýysa Update'i durdur!
+        if (Object == null || !isYanginBasladi) return;
 
-        // ? Emniyet Kilidi: Söndürme iþlemi esnasýnda büyüme hesaplamasýný atla!
         if (isExtinguishing) 
         {
             isExtinguishing = false; 
             return; 
         }
+
         Vector3 current = Object.transform.localScale;
         float delta = scaleSpeed * Time.deltaTime;
 
@@ -92,7 +95,7 @@ public class ScaleOverTimeAndSpawnFires : MonoBehaviour
 
         if (!hasSpawnedFirstGeneration && current.x >= maxScaleX * spawnThresholdPercentage)
         {
-            Debug.Log("Ana ateþ büyüme eþiðine ulaþtý. Ýlk nesil küçük ateþleri rüzgar yönünde doðuruyor...");
+            Debug.Log("Ana ateþ büyüme eþiðine ulaþtý. Ýlk nesil küçük ateþleri doðuruyor...");
             hasSpawnedFirstGeneration = true;
             StartCoroutine(SpawnSmallFires(this, 1));
         }
@@ -114,28 +117,30 @@ public class ScaleOverTimeAndSpawnFires : MonoBehaviour
             yield break;
         }
 
-        Vector3 parentPosition = parentFire != null ? parentFire.Object.transform.position : Object.transform.position;
+        // ? Emniyet Kilidi 2: Ebeveyn ateþ söndürüldüyse iþlemi güvenle iptal et
+        if (parentFire == null || parentFire.Object == null) yield break;
+
+        Vector3 parentPosition = parentFire.Object.transform.position;
         float adjustedSpawnRadius = spawnRadius * (1 + generation * 0.2f);
         List<Vector3> spawnPositions = new List<Vector3>();
 
-        // 1) Rüzgar yönünü normalize et ve Y eksenini sýfýrla (Yatay düzlemde yayýlým)
         Vector3 normalizedWind = windDirection.normalized;
         normalizedWind.y = 0;
 
         for (int i = 0; i < numberOfSmallFires; i++)
         {
+            // Döngü her döndüðünde parent hala yaþýyor mu kontrolü
+            if (parentFire == null || parentFire.Object == null) yield break;
+
             Vector3 spawnPosition;
             bool validPosition = false;
             int attempts = 0;
 
             do
             {
-                // 2) KRÝTÝK DEÐÝÞÝKLÝK: 360 derece rastgelelik yerine rüzgar yönünü baz alýyoruz
-                // Rüzgar yönünün etrafýna küçük bir sapma (koni efekti) ekliyoruz
                 Vector3 randomAngleOffset = new Vector3(Random.Range(-windSpreadingCone, windSpreadingCone), 0f, Random.Range(-windSpreadingCone, windSpreadingCone));
                 Vector3 finalSpreadDirection = (normalizedWind + randomAngleOffset).normalized;
 
-                // Ateþi rüzgar doðrultusunda ileriye doðru fýrlatýyoruz
                 float randomDistance = Random.Range(adjustedSpawnRadius * 0.5f, adjustedSpawnRadius);
                 Vector3 offset = finalSpreadDirection * randomDistance;
                 
@@ -165,7 +170,7 @@ public class ScaleOverTimeAndSpawnFires : MonoBehaviour
 
                 attempts++;
             }
-            while (!validPosition && attempts < 15); // Deneme limiti artýrýldý
+            while (!validPosition && attempts < 15);
 
             if (!validPosition) continue;
 
@@ -175,18 +180,17 @@ public class ScaleOverTimeAndSpawnFires : MonoBehaviour
             GameObject smallFire = Instantiate(selectedPrefab, spawnPosition, Quaternion.identity);
             smallFire.tag = "fire";
 
-            // Doðacak yeni küçük ateþ prefabýna da bu rüzgar verilerini aktarýyoruz ki o da rüzgara doðru büyüsün
             ScaleOverTimeAndSpawnFires childScript = smallFire.GetComponent<ScaleOverTimeAndSpawnFires>();
             if (childScript != null)
             {
                 childScript.windDirection = this.windDirection;
                 childScript.windSpreadingCone = this.windSpreadingCone;
                 childScript.maxFireGeneration = this.maxFireGeneration;
+                childScript.isYanginBasladi = true; // Yeni doðan çocuðun kilidini açýyoruz
             }
 
             StartCoroutine(FadeInAndScaleOverTime(smallFire, generation));
 
-            // Burasý her tekil küçük ateþin arasýndaki saniyeyi belirler
             yield return new WaitForSeconds(0.5f);
         }
     }
@@ -200,6 +204,7 @@ public class ScaleOverTimeAndSpawnFires : MonoBehaviour
 
         while (elapsedTime < fadeInTime)
         {
+            // ? Emniyet Kilidi 3: Oyuncu ateþi söndürdüyse Coroutine'i anýnda bitir! (Null önler)
             if (smallFire == null) yield break;
             elapsedTime += Time.deltaTime;
             yield return null;
@@ -209,19 +214,18 @@ public class ScaleOverTimeAndSpawnFires : MonoBehaviour
         Vector3 targetScale = new Vector3(smallFireMaxScaleX, smallFireMaxScaleY, smallFireMaxScaleZ);
         bool hasSpawnedNewFires = false;
 
+        if (smallFire == null) yield break;
+
         BoxCollider boxCollider = smallFire.GetComponent<BoxCollider>();
         if (boxCollider == null)
         {
             boxCollider = smallFire.AddComponent<BoxCollider>();
             boxCollider.isTrigger = true;
             boxCollider.size = smallFireColliderSize;
-            
         }
        
         Vector3 newCenter = boxCollider.center;
-
         newCenter.y = 0.81f; 
-
         boxCollider.center = newCenter;
 
         Rigidbody rb = smallFire.GetComponent<Rigidbody>();
@@ -241,6 +245,7 @@ public class ScaleOverTimeAndSpawnFires : MonoBehaviour
 
         while (elapsedTime < smallFireGrowthTime)
         {
+            // ? Emniyet Kilidi 4: Söndürme kontrolü
             if (smallFire == null) yield break;
 
             elapsedTime += Time.deltaTime * smallFireGrowthSpeed;
@@ -253,27 +258,30 @@ public class ScaleOverTimeAndSpawnFires : MonoBehaviour
                 main.startSize = Mathf.Lerp(0.5f, 1.5f, smallFire.transform.localScale.x / targetScale.x);
             }
 
-            // Bir sonraki nesil ateþ dalgasýnýn spawnlanma aný
             if (!hasSpawnedNewFires && smallFire.transform.localScale.x >= (targetScale.x * spawnThresholdPercentage))
             {
                 hasSpawnedNewFires = true;
                 
-                // Dalgalar arasýnda 'spawnDelay' kadar mola vererek hýzý kýrýyoruz
                 yield return new WaitForSeconds(spawnDelay);
                 
+                // ? Emniyet Kilidi 5 & Düzeltme: `this` yerine bizzat bu küçük ateþin kendi scriptini aktarýyoruz
                 if (smallFire != null)
                 {
-                    StartCoroutine(SpawnSmallFires(this, generation + 1));
+                    ScaleOverTimeAndSpawnFires currentChildScript = smallFire.GetComponent<ScaleOverTimeAndSpawnFires>();
+                    if (currentChildScript != null)
+                    {
+                        StartCoroutine(SpawnSmallFires(currentChildScript, generation + 1));
+                    }
                 }
             }
 
             yield return null;
         }
 
-        if (smallFire != null)
-            smallFire.transform.localScale = targetScale;
+        if (smallFire == null) yield break;
+        smallFire.transform.localScale = targetScale;
 
-        if (smallFire != null && Random.value < destroyProbability)
+        if (Random.value < destroyProbability)
         {
             float fireLifetime = 10f + (generation * 2f);
             yield return new WaitForSeconds(fireLifetime);
