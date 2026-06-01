@@ -1,5 +1,3 @@
-using System;
-using Unity.VisualScripting;
 using UnityEngine;
 
 public class SafeZone : MonoBehaviour
@@ -8,36 +6,49 @@ public class SafeZone : MonoBehaviour
     public AudioSource audio;
     public AudioClip charaterRunFire;
     public AudioClip failEarlyFire;
+    public bool isExamScene = false;
+    private bool isAudioStarted = false;
+
     private void OnTriggerEnter(Collider other)
     {
-        // Gelen nesne oyuncu mu? (VR Kamerasının Rig'i veya elleri)
-        // Eğer OVRCameraRig'e "Player" tag'i verdiysen:
-        if ((other.CompareTag("Player") || other.name.Contains("Anchor") || other.name.Contains("Rig")) && isPlayerExit == true && SahneYonetici.isFireStart  ==true)
+        if ((other.CompareTag("Player") || other.name.Contains("Anchor") || other.name.Contains("Rig")) 
+            && isPlayerExit == true 
+            && SahneYonetici.isFireStart == true)
         {
-            // Yangın Durum Yöneticisine bakıyoruz
-            if (YanginDurumYonetici.Instance != null)
+            if (YanginDurumYonetici.Instance == null) 
             {
-                // EĞER yangın kontrolden çıkmışsa ve oyuncu buraya kaçtıysa: İYİ/DOĞRU DAVRANIŞ BİTİŞİ
-                // EĞER yangın hala ufaksa ve bodoslama kaçtıysa: KÖTÜ/KORKAK DAVRANIŞ BİTİŞİ
-                
-                // Kod durum yöneticisindeki isKontroldenCikti değişkenine göre kararı otomatik verir:
-                if (GameObject.FindGameObjectsWithTag("fire").Length >= YanginDurumYonetici.Instance.maxFireCountThreshold)
+                Debug.LogWarning("[SafeZone] YanginDurumYonetici.Instance null!");
+                return;
+            }
+
+            if (GameObject.FindGameObjectsWithTag("fire").Length >= YanginDurumYonetici.Instance.maxFireCountThreshold)
+            {
+                if (isExamScene == false && isAudioStarted == false)
                 {
+                    isAudioStarted = true;
                     audio.PlayOneShot(charaterRunFire);
-
-                    YanginDurumYonetici.Instance.SimulasyonuBitir(true, "Doğru Karar! Kontrolden çıkan yangından başarıyla tahliye oldunuz.");
-
                 }
-                else
+
+                YanginDurumYonetici.Instance.SimulasyonuBitir(true, "Doğru Karar! Kontrolden çıkan yangından başarıyla tahliye oldunuz.");
+                
+                if (ScoreManager.Instance != null)
+                    ScoreManager.Instance.PuanDus(40);
+            }
+            else
+            {
+                if (YanginDurumYonetici.isSceneSuccessful == false)
                 {
-                    if (YanginDurumYonetici.isSceneSuccessful == false)
-                    {                    audio.PlayOneShot(failEarlyFire);
-
-                        
+                    if (isExamScene == false && isAudioStarted == false)
+                    {
+                        isAudioStarted = true;
+                        audio.PlayOneShot(failEarlyFire);
                     }
-    
-                    YanginDurumYonetici.Instance.SimulasyonuBitir(false, "Başarısız! Yangın hala söndürülebilirdi, alanı erken terk ettiniz.");
                 }
+
+                YanginDurumYonetici.Instance.SimulasyonuBitir(false, "Başarısız! Yangın hala söndürülebilirdi, alanı erken terk ettiniz.");
+                
+                if (ScoreManager.Instance != null)
+                    ScoreManager.Instance.PuanDus(80);
             }
         }
     }

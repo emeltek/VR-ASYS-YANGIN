@@ -1,16 +1,16 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.SceneManagement; // Unity'nin kendi sahne kütüphanesi
+using UnityEngine.SceneManagement; // Unity'nin kendi sahne kï¿½tï¿½phanesi
 
-// ? KRİTİK DEĞİŞİKLİK: Çakışmayı önlemek için sınıf adını 'SahneYonetici' yaptık
+// ? KRï¿½Tï¿½K DEï¿½ï¿½ï¿½ï¿½KLï¿½K: ï¿½akï¿½ï¿½mayï¿½ ï¿½nlemek iï¿½in sï¿½nï¿½f adï¿½nï¿½ 'SahneYonetici' yaptï¿½k
 public class SahneYonetici : MonoBehaviour
 {
     [Header("Referanslar")]
-    [Tooltip("Sahnede duran ana yangın nesnesini (Eren) buraya sürükleyin.")]
+    [Tooltip("Sahnede duran ana yangï¿½n nesnesini (Eren) buraya sï¿½rï¿½kleyin.")]
     public ScaleOverTimeAndSpawnFires anaYanginScripti;
 
-    [Tooltip("Başlangıçta sahnede gizli duracaksa ana ateş nesnesi")]
+    [Tooltip("Baï¿½langï¿½ï¿½ta sahnede gizli duracaksa ana ateï¿½ nesnesi")]
     public GameObject anaYanginObjesi;
 
     public static bool isFireStart = false;
@@ -21,10 +21,12 @@ public class SahneYonetici : MonoBehaviour
             anaYanginObjesi.SetActive(false);
         }
     }
+    // Singleton pattern â€” DontDestroyOnLoad nesnelerinde ÅŸunu kullan:
+   
 
     public void YanginiBaslat()
     {
-        Debug.Log("[SİMÜLASYON] Start butonuna basıldı! Yangın tetikleniyor...");
+        Debug.Log("[Sï¿½Mï¿½LASYON] Start butonuna basï¿½ldï¿½! Yangï¿½n tetikleniyor...");
         
         isFireStart = true;
         if (anaYanginObjesi != null)
@@ -39,35 +41,34 @@ public class SahneYonetici : MonoBehaviour
     }
 
     /// <summary>
-    /// ? Mevcut sahneyi tamamen sıfırlar ve yeniden başlatır.
+    /// ? Mevcut sahneyi tamamen sï¿½fï¿½rlar ve yeniden baï¿½latï¿½r.
     /// </summary>
     public void SahneyiYenidenBaslat()
     {
-        Debug.Log("[SAHNE YÖNETİCİSİ] Sahne yeniden başlatılıyor...");
-        
-        // ? Değişiklik: UnityEngine.SceneManagement altındaki gerçek Scene yapısını çağırıyoruz
+        isFireStart = false; // â† EKLENDÄ°
+        Time.timeScale = 1f; // â† EÄŸer oyunu durdurduysanÄ±z
+        Debug.Log("[SAHNE YÃ–NETÄ°CÄ°SÄ°] Sahne yeniden baÅŸlatÄ±lÄ±yor...");
         Scene mevcutSahne = UnityEngine.SceneManagement.SceneManager.GetActiveScene();
         UnityEngine.SceneManagement.SceneManager.LoadScene(mevcutSahne.name);
     }
-
     /// <summary>
-    /// ?? Build Settings'teki bir sonraki sahneye geçiş yapar.
+    /// ?? Build Settings'teki bir sonraki sahneye geï¿½iï¿½ yapar.
     /// </summary>
     public void SonrakiSahneyeGec()
     {
-        Debug.Log("[SAHNE YÖNETİCİSİ] Sonraki sahneye geçiliyor...");
+        Debug.Log("[SAHNE Yï¿½NETï¿½Cï¿½Sï¿½] Sonraki sahneye geï¿½iliyor...");
 
-        // ? Değişiklik: Çakışma ihtimaline karşı tam uzantı (namespace) belirttik
+        // ? Deï¿½iï¿½iklik: ï¿½akï¿½ï¿½ma ihtimaline karï¿½ï¿½ tam uzantï¿½ (namespace) belirttik
         int mevcutSahneIndex = UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex;
         UnityEngine.SceneManagement.SceneManager.LoadScene(mevcutSahneIndex + 1);
     }
 
     /// <summary>
-    /// ? Uygulamayı tamamen kapatır ve çıkış yapar.
+    /// ? Uygulamayï¿½ tamamen kapatï¿½r ve ï¿½ï¿½kï¿½ï¿½ yapar.
     /// </summary>
     public void UygulamadanCik()
     {
-        Debug.Log("[SAHNE YÖNETİCİSİ] Uygulamadan çıkış yapılıyor...");
+        Debug.Log("[SAHNE Yï¿½NETï¿½Cï¿½Sï¿½] Uygulamadan ï¿½ï¿½kï¿½ï¿½ yapï¿½lï¿½yor...");
 
         Application.Quit();
 

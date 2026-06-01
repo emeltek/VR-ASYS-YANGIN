@@ -21,6 +21,7 @@ public class WindPositionChecker : MonoBehaviour
     [Header("Sesli Uyarý Ayarlarý")]
     public AudioSource warningAudioSource;
     public AudioClip wrongBehaviorClip;
+    public bool isExamScene = false;
 
     void Update()
     {
@@ -96,7 +97,11 @@ public class WindPositionChecker : MonoBehaviour
             {
                 if (!warningAudioSource.isPlaying)
                 {
-                    warningAudioSource.PlayOneShot(wrongBehaviorClip);
+                    if (isExamScene == false)
+                    {
+                        warningAudioSource.PlayOneShot(wrongBehaviorClip);
+
+                    }
                 }
             }
         }

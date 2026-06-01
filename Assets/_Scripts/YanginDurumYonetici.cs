@@ -26,10 +26,21 @@ public class YanginDurumYonetici : MonoBehaviour
     private float checkTimer = 0f;
     private float checkInterval = 1f;
     public static bool isSceneSuccessful = false;
+    public bool isExamScene = false;
+    public GameObject scoreUI;
+    private bool firebiggestAuidoPlay = false;
 
     void Awake()
     {
         if (Instance == null) Instance = this;
+        else Destroy(gameObject); // ? BU SATIRI EKLE
+    
+        // Static deðiþkeni sýfýrla
+        isSceneSuccessful = false;
+        isOyunBitti = false;
+        isKontroldenCikti = false;
+    
+        scoreUI.SetActive(false);
     }
 
     void Update()
@@ -76,37 +87,44 @@ public class YanginDurumYonetici : MonoBehaviour
         isKontroldenCikti = true;
         if (sirenAudioSource != null && evacuationClip != null)
         {
-            if (!sirenAudioSource.isPlaying)
+            if (!sirenAudioSource.isPlaying && firebiggestAuidoPlay == false)
             {
-                sirenAudioSource.loop = true;
+
+                firebiggestAuidoPlay = true;
                 sirenAudioSource.clip = evacuationClip;
                 sirenAudioSource.Play();
             }
         }
     }
 
-    // ? Fonksiyon parametresine 'isSonduruldu' kontrolü ekledik
     public void SimulasyonuBitir(bool iyiBitisMi, string bitisMesaji, bool isSonduruldu = false)
     {
         if (isOyunBitti) return;
         isOyunBitti = true;
 
-        Debug.Log($"[SAHNE BÝTTÝ] {bitisMesaji}");
+        if (scoreUI != null)
+            scoreUI.SetActive(true);
+
+        // ? NULL KONTROLÜ EKLENDÝ
+        if (ScoreManager.Instance != null)
+        {
+            ScoreManager.Instance.UpdateScoreUI();
+        }
 
         if (oyunSonuPaneli != null)
-        {
             oyunSonuPaneli.SetActive(true);
-        }
 
         if (sirenAudioSource != null && sirenAudioSource.isPlaying)
-        {
             sirenAudioSource.Stop();
-        }
 
-        // ? YENÝ: Eðer yangýn baþarýyla söndürülerek bittiyse baþarý anonsunu çal
         if (isSonduruldu && sirenAudioSource != null && fireSuccessClip != null)
         {
-            sirenAudioSource.PlayOneShot(fireSuccessClip);
+            // ? NULL KONTROLÜ EKLENDÝ
+            if (ScoreManager.Instance != null)
+                ScoreManager.Instance.PuanEkle(80);
+
+            if (isExamScene == false)
+                sirenAudioSource.PlayOneShot(fireSuccessClip);
         }
     }
 }

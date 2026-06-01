@@ -2,6 +2,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SocialPlatforms.Impl;
 
 public class PlayerFireController : MonoBehaviour
 {
@@ -33,8 +34,12 @@ public class PlayerFireController : MonoBehaviour
                 {
                     if (audioSource != null)
                     {
+                        
+                        
                         audioSource.Play();
                         Debug.Log("[ÝSG UYARI] Oyuncu ateþe girdi, ses çalýndý. 10 saniye kilit aktif.");
+                        if (ScoreManager.Instance != null)
+                            ScoreManager.Instance.PuanDus(40);
                     }
                 }
             }
@@ -43,7 +48,7 @@ public class PlayerFireController : MonoBehaviour
             // Puan kesme iþlemi süre kilidine takýlmaz; oyuncu her ateþe deðdiðinde -35 puaný anýnda yer.
             if (ScoreManager.Instance != null)
             {
-                ScoreManager.Instance.totalScore -= 35;
+                ScoreManager.Instance.PuanDus(35);
                 Debug.Log("[CEZA] Ateþe çok yaklaþýldý! -35 Puan.");
             }
         }
