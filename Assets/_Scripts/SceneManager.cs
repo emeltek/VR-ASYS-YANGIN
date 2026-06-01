@@ -26,17 +26,23 @@ public class SahneYonetici : MonoBehaviour
 
     public void YanginiBaslat()
     {
-        Debug.Log("[S�M�LASYON] Start butonuna bas�ld�! Yang�n tetikleniyor...");
-        
+        Debug.Log("[DEBUG] YanginiBaslat çalıştı");
+        Debug.Log("[DEBUG] anaYanginObjesi null mu: " + (anaYanginObjesi == null));
+        Debug.Log("[DEBUG] anaYanginScripti null mu: " + (anaYanginScripti == null));
+    
         isFireStart = true;
+    
         if (anaYanginObjesi != null)
         {
             anaYanginObjesi.SetActive(true);
+            Debug.Log("[DEBUG] anaYanginObjesi SetActive(true) yapıldı, aktif mi: " + anaYanginObjesi.activeSelf);
         }
-
+    
         if (anaYanginScripti != null)
         {
             anaYanginScripti.isYanginBasladi = true;
+            Debug.Log("[DEBUG] isYanginBasladi = " + anaYanginScripti.isYanginBasladi);
+            Debug.Log("[DEBUG] Object null mu: " + (anaYanginScripti.Object == null));
         }
     }
 
@@ -56,13 +62,16 @@ public class SahneYonetici : MonoBehaviour
     /// </summary>
     public void SonrakiSahneyeGec()
     {
-        Debug.Log("[SAHNE Y�NET�C�S�] Sonraki sahneye ge�iliyor...");
+        // Tüm static değişkenleri sıfırla
+        SahneYonetici.isFireStart = false;
+        YanginDurumYonetici.isSceneSuccessful = false;
 
-        // ? De�i�iklik: �ak��ma ihtimaline kar�� tam uzant� (namespace) belirttik
+        Time.timeScale = 1f;
+
+        Debug.Log("[SAHNE YÖNETİCİSİ] Sonraki sahneye geçiliyor...");
         int mevcutSahneIndex = UnityEngine.SceneManagement.SceneManager.GetActiveScene().buildIndex;
         UnityEngine.SceneManagement.SceneManager.LoadScene(mevcutSahneIndex + 1);
     }
-
     /// <summary>
     /// ? Uygulamay� tamamen kapat�r ve ��k�� yapar.
     /// </summary>

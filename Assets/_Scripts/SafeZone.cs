@@ -36,17 +36,18 @@ public class SafeZone : MonoBehaviour
             }
             else
             {
-                if (YanginDurumYonetici.isSceneSuccessful == false)
+                // Eğer sahne zaten başarıyla bittiyse SafeZone'u tamamen yoksay
+                if (YanginDurumYonetici.isSceneSuccessful == true)
+                    return;
+
+                if (isExamScene == false && isAudioStarted == false)
                 {
-                    if (isExamScene == false && isAudioStarted == false)
-                    {
-                        isAudioStarted = true;
-                        audio.PlayOneShot(failEarlyFire);
-                    }
+                    isAudioStarted = true;
+                    audio.PlayOneShot(failEarlyFire);
                 }
 
                 YanginDurumYonetici.Instance.SimulasyonuBitir(false, "Başarısız! Yangın hala söndürülebilirdi, alanı erken terk ettiniz.");
-                
+    
                 if (ScoreManager.Instance != null)
                     ScoreManager.Instance.PuanDus(80);
             }

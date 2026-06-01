@@ -73,8 +73,11 @@ public class ScaleOverTimeAndSpawnFires : MonoBehaviour
 
     void Update()
     {
-        if (Object == null || !isYanginBasladi) return;
-
+        if (Object == null || !isYanginBasladi)
+        {
+            Debug.Log("[DEBUG] Update atlandý — Object null: " + (Object == null) + " | isYanginBasladi: " + isYanginBasladi);
+            return;
+        }
         // ? isExtinguishing true ise büyütme kodunu tamamen atla
         // Flag'i burada false yapmýyoruz, FireWaterCollision yönetiyor
         if (isExtinguishing) return;
