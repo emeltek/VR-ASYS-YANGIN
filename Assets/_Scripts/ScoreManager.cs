@@ -5,8 +5,8 @@ public class ScoreManager : MonoBehaviour
 {
     public static ScoreManager Instance;
 
-    [Header("Puan Ayarlarý")]
-    public int totalScore = 80;      // Baþlangýç puaný
+    [Header("Puan Ayarlar?")]
+    public int totalScore = 0;      // Ba?lang?? puan?
     public int maxScore = 100;       // Maksimum puan
     public int minScore = 0;         // Minimum puan
 
@@ -20,18 +20,18 @@ public class ScoreManager : MonoBehaviour
 
     void Start()
     {
-        totalScore = 80; // Sahne baþýnda her zaman 80'den baþla
+        totalScore = 0; // Sahne baÅŸÄ±nda her zaman 0'dan baÅŸla
         UpdateScoreUI();
     }
 
-    // Puan eklemek için
+    // Puan eklemek i?in
     public void PuanEkle(int miktar)
     {
         totalScore = Mathf.Clamp(totalScore + miktar, minScore, maxScore);
         UpdateScoreUI();
     }
 
-    // Puan düþürmek için
+    // Puan d???rmek i?in
     public void PuanDus(int miktar)
     {
         totalScore = Mathf.Clamp(totalScore - miktar, minScore, maxScore);
