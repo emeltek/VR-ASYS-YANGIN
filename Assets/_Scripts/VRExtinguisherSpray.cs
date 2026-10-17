@@ -52,6 +52,8 @@ public class VRExtinguisherSpray : MonoBehaviour
             if (shouldSpray)
             {
                 if (!isSpraying && SahneYonetici.isFireStart == true) StartSpray();
+                if (isSpraying && YanginDurumYonetici.Instance != null)
+                    YanginDurumYonetici.Instance.SikmaSuresiEkle(Time.deltaTime);
 
                 // ? ÝÞTE EKLEMEN GEREKEN HAPTIC SATIRI:
                 // Ýki kumandaya da sürekli hafif/orta þiddette bir titreþim gönderiyoruz

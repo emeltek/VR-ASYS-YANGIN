@@ -63,6 +63,9 @@ public class ScaleOverTimeAndSpawnFires : MonoBehaviour
     {
         if (Object == null)
             Object = this.gameObject;
+
+        // Her ateş KNN'de otomatik bir tehlike düğümü olur
+        KnnDangerNode.Ensure(Object);
     }
 
     void Start()
@@ -207,6 +210,7 @@ public class ScaleOverTimeAndSpawnFires : MonoBehaviour
             GameObject smallFire = Instantiate(selectedPrefab, spawnPosition, Quaternion.identity);
             smallFire.tag = "fire";
             smallFire.name = $"Ates_Nesil_{generation}_Id_{i}_{Random.Range(100, 999)}";
+            KnnDangerNode.Ensure(smallFire); // Prefab'da script olmasa da KNN düğümü olsun
 
             ScaleOverTimeAndSpawnFires childScript = smallFire.GetComponent<ScaleOverTimeAndSpawnFires>();
             if (childScript != null)

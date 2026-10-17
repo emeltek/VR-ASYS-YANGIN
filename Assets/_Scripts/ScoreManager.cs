@@ -38,11 +38,38 @@ public class ScoreManager : MonoBehaviour
         UpdateScoreUI();
     }
 
+    // Puanı doğrudan belirli bir değere ayarlar (örn. tahliye bandı)
+    public void PuanAyarla(int deger)
+    {
+        totalScore = Mathf.Clamp(deger, minScore, maxScore);
+        UpdateScoreUI();
+    }
+
+    private bool isFinal = false; // Senaryo bittiyse risk etiketi de gösterilir
+
+    // Senaryo sonunda çağrılır: bundan sonraki her puan değişiminde etiket de güncellenir
+    public void ShowFinalScore()
+    {
+        isFinal = true;
+        UpdateScoreUI();
+    }
+
      public void UpdateScoreUI()
     {
         if (scoreText != null)
         {
             scoreText.text = "Skor: " + totalScore;
+            if (isFinal)
+                scoreText.text += "\nRisk Düzeyi: " + GetRiskLabel(totalScore);
         }
+    }
+
+    // Puana göre renkli risk etiketi döner
+    private string GetRiskLabel(int value)
+    {
+        if (value >= 80) return "<color=#2ECC71>Güvenli</color>";
+        if (value >= 60) return "<color=#F1C40F>Orta Riskli</color>";
+        if (value >= 40) return "<color=#E67E22>Riskli</color>";
+        return "<color=#E74C3C>Çok Riskli</color>";
     }
 }

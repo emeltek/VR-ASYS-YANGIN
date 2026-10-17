@@ -38,19 +38,12 @@ public class PlayerFireController : MonoBehaviour
                         
                         audioSource.Play();
                         Debug.Log("[ÝSG UYARI] Oyuncu ateþe girdi, ses çalýndý. 10 saniye kilit aktif.");
-                        if (ScoreManager.Instance != null)
-                            ScoreManager.Instance.PuanDus(40);
                     }
                 }
             }
 
-            // 2) PUAN KESME MANTIÐI
-            // Puan kesme iþlemi süre kilidine takýlmaz; oyuncu her ateþe deðdiðinde -35 puaný anýnda yer.
-            if (ScoreManager.Instance != null)
-            {
-                ScoreManager.Instance.PuanDus(35);
-                Debug.Log("[CEZA] Ateþe çok yaklaþýldý! -35 Puan.");
-            }
+            // Puan kesme artýk KnnDangerZoneSystem'de ("Yangýn" bölgesi).
+            // Ateþe yaklaþma cezasý orada hesaplanýr ve senaryo sonunda bir kere düþülür.
         }
     }
 }

@@ -23343,6 +23343,11 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   maxFireCountThreshold: 15
+  tahliyeTamBandi: {x: 60, y: 79}
+  tahliyeKismiBandi: {x: 40, y: 59}
+  tahliyePasifBandi: {x: 0, y: 39}
+  mudahaleIcinMinSondurulenAtes: 1
+  mudahaleIcinMinSikmaSuresi: 3
   sahneYonetici: {fileID: 1451579076}
   oyunSonuPaneli: {fileID: 1012184596}
   sirenAudioSource: {fileID: 540952638}
@@ -84610,6 +84615,7 @@ GameObject:
   - component: {fileID: 7218948595328874706}
   - component: {fileID: 5801245061293105776}
   - component: {fileID: 7218948595328874707}
+  - component: {fileID: 7218948595328874708}
   m_Layer: 4
   m_Name: PlayerController
   m_TagString: Player
@@ -121870,6 +121876,38 @@ MonoBehaviour:
   audioSource: {fileID: 1815262865}
   isExamScene: 1
   warningCooldown: 10
+--- !u!114 &7218948595328874708
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3903482225359387742}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a847f94d71f99e04184fad7d2cf3cb36, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  character: {fileID: 1710862995}
+  zones:
+  - name: "Yang\u0131n"
+    active: 1
+    points: []
+    k: 1
+    ignoreHeight: 1
+    thresholdMode: 0
+    distanceThreshold: 1.5
+    maxDistance: 3
+    riskThreshold: 0.2
+    entryPenalty: 10
+    penaltyPerSecond: 6
+    scaleByRisk: 1
+    gizmoColor: {r: 1, g: 0.25, b: 0, a: 1}
+    initialized: 1
+  maxPenalty: 60
+  showDebugUI: 1
+  drawGizmos: 1
+  logZoneChanges: 1
 --- !u!224 &7223244414352887428
 RectTransform:
   m_ObjectHideFlags: 0

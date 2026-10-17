@@ -87,10 +87,11 @@ public class WindPositionChecker : MonoBehaviour
         {
             penaltyTimer = 0f;
 
-            if (ScoreManager.Instance != null)
+            // Ceza KNN konum havuzuna eklenir (toplam konum cezasý maxPenalty ile sýnýrlý)
+            if (KnnDangerZoneSystem.Instance != null)
             {
-                ScoreManager.Instance.totalScore -= 10; 
-                Debug.Log("[TEHLÝKE] Hem rüzgarý karþýna aldýn hem de ateþe çok yakýnsýn! -10 Puan!");
+                KnnDangerZoneSystem.Instance.AddExternalPenalty("Rüzgar Yönü", 10f);
+                Debug.Log("[TEHLÝKE] Hem rüzgarý karþýna aldýn hem de ateþe çok yakýnsýn! -10 konum puaný.");
             }
 
             if (warningAudioSource != null && wrongBehaviorClip != null)

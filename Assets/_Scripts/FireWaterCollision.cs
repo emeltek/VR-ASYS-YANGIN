@@ -78,6 +78,8 @@ public class FireWaterCollision : MonoBehaviour
 
         if (currentScale.x <= destroyThreshold)
         {
+            if (YanginDurumYonetici.Instance != null)
+                YanginDurumYonetici.Instance.AtesSonduruldu(fireObject);
             Destroy(fireObject);
         }
     }

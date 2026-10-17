@@ -6,6 +6,54 @@ public class YanginDurumYonetici : MonoBehaviour
 
     [Header("Kontrolden ??kma E?i?i")] public int maxFireCountThreshold = 15;
 
+    [Header("Tahliye Puani (mudahale + telefona gore bant)")]
+    [Tooltip("Sondurmeye calisti VE telefonla yardim istedi: Orta Riskli (x = en dusuk, y = en yuksek).")]
+    public Vector2Int tahliyeTamBandi = new Vector2Int(60, 79);
+    [Tooltip("Ikisinden sadece birini yapti (sondurmeye calisti YA DA telefon etti): Riskli.")]
+    public Vector2Int tahliyeKismiBandi = new Vector2Int(40, 59);
+    [Tooltip("Hicbir sey yapmadi, izleyip kacti: Cok Riskli.")]
+    public Vector2Int tahliyePasifBandi = new Vector2Int(0, 39);
+
+    [Header("Mudahale Kontrolu")]
+    [Tooltip("En az bu kadar ates sondurduyse mudahale etti sayilir.")]
+    public int mudahaleIcinMinSondurulenAtes = 1;
+    [Tooltip("Ya da toplam en az bu kadar saniye sondurucu sikti ise mudahale etti sayilir.")]
+    public float mudahaleIcinMinSikmaSuresi = 3f;
+
+    // Mudahale takibi (FireWaterCollision, VRExtinguisherSpray ve PhoneController bildirir)
+    private readonly System.Collections.Generic.HashSet<int> sondurulenAtesler = new System.Collections.Generic.HashSet<int>();
+    public int SondurulenAtesSayisi => sondurulenAtesler.Count;
+    public float ToplamSikmaSuresi { get; private set; }
+    public bool IsTelefonEdildi { get; private set; }
+    public bool IsMudahaleEtti => SondurulenAtesSayisi >= mudahaleIcinMinSondurulenAtes
+                                  || ToplamSikmaSuresi >= mudahaleIcinMinSikmaSuresi;
+
+    public void AtesSonduruldu(GameObject ates)
+    {
+        if (ates != null && sondurulenAtesler.Add(ates.GetInstanceID()))
+            Debug.Log($"[MUDAHALE] Ates sonduruldu. Toplam: {SondurulenAtesSayisi}");
+    }
+
+    public void SikmaSuresiEkle(float sure) => ToplamSikmaSuresi += sure;
+
+    private bool isTahliyeIleBitti = false;
+
+    public void TelefonEdildi()
+    {
+        if (IsTelefonEdildi) return;
+        IsTelefonEdildi = true;
+
+        // Tahliyeden sonra guvenli alandan yardim istemek de dogru davranis: puani yeniden hesapla
+        if (isOyunBitti && isTahliyeIleBitti)
+        {
+            Debug.Log("[TAHLIYE] Tahliye sonrasi telefonla yardim istendi, puan yeniden hesaplaniyor.");
+            TahliyePuaniniHesapla();
+        }
+    }
+
+    /// <summary>Senaryo bittiyse true (sonuc ekrani acildi, puan kesinlesti).</summary>
+    public bool IsOyunBitti => isOyunBitti;
+
     [Header("Referanslar")] public SahneYonetici sahneYonetici; // SahneYonetici'ye eri?tik
 
     [Header("Oyun Sonu Paneli")] public GameObject oyunSonuPaneli;
@@ -94,15 +142,19 @@ public class YanginDurumYonetici : MonoBehaviour
             {
                 if (!sirenAudioSource.isPlaying && firebiggestAuidoPlay == false)
                 {
-
+                        
                     firebiggestAuidoPlay = true;
                     sirenAudioSource.clip = evacuationClip;
-                    sirenAudioSource.Play();
+                      if(isExamScene == false)
+                                        {
+                                        sirenAudioSource.Play();
+                                            
+                                        }
                 }
             }
         }
 
-        public void SimulasyonuBitir(bool iyiBitisMi, string bitisMesaji, bool isSonduruldu = false)
+        public void SimulasyonuBitir(bool iyiBitisMi, string bitisMesaji, bool isSonduruldu = false, bool isTahliye = false)
         {
             if (isOyunBitti) return;
             isOyunBitti = true;
@@ -113,7 +165,7 @@ public class YanginDurumYonetici : MonoBehaviour
             // ? NULL KONTROL? EKLEND?
             if (ScoreManager.Instance != null)
             {
-                ScoreManager.Instance.UpdateScoreUI();
+                ScoreManager.Instance.ShowFinalScore();
             }
 
             if (oyunSonuPaneli != null)
@@ -122,14 +174,61 @@ public class YanginDurumYonetici : MonoBehaviour
             if (sirenAudioSource != null && sirenAudioSource.isPlaying)
                 sirenAudioSource.Stop();
 
-            if (isSonduruldu && sirenAudioSource != null && fireSuccessClip != null)
+            if (isSonduruldu)
             {
-                // ? NULL KONTROL? EKLEND?
+                // Puan ses ayarlarindan bagimsiz verilir
                 if (ScoreManager.Instance != null)
                     ScoreManager.Instance.PuanEkle(80);
 
-                if (isExamScene == false)
+                if (isExamScene == false && sirenAudioSource != null && fireSuccessClip != null)
                     sirenAudioSource.PlayOneShot(fireSuccessClip);
             }
+
+            KnnDangerZoneSystem knn = KnnDangerZoneSystem.Instance;
+            if (knn != null)
+                knn.enabled = false; // Senaryo bitti, artik ceza islemesin
+
+            if (ScoreManager.Instance == null) return;
+
+            if (isTahliye)
+            {
+                isTahliyeIleBitti = true;
+                TahliyePuaniniHesapla();
+            }
+            else if (knn != null)
+            {
+                // KNN konum cezasi (en fazla maxPenalty) senaryo sonunda bir kere dusulur.
+                // +80 eklendikten sonra dusulur ki ScoreManager'in 0 siniri cezayi yutmasin.
+                int konumCezasi = Mathf.RoundToInt(knn.TotalPenalty);
+                Debug.Log($"[KNN] Konum cezasi: -{konumCezasi} (sinir: {knn.maxPenalty})");
+                if (konumCezasi > 0)
+                    ScoreManager.Instance.PuanDus(konumCezasi);
+            }
+        }
+
+        // Tahliye puani: bant, yapilanlara gore secilir; bant icindeki yeri konum davranisi belirler.
+        //   sondurmeye calisti + telefon -> Orta Riskli
+        //   sadece biri               -> Riskli
+        //   hicbiri                   -> Cok Riskli
+        // Telefon tahliyeden sonra edilirse TelefonEdildi() bunu tekrar cagirir.
+        void TahliyePuaniniHesapla()
+        {
+            if (ScoreManager.Instance == null) return;
+
+            Vector2Int bant;
+            string durum;
+            if (IsMudahaleEtti && IsTelefonEdildi)       { bant = tahliyeTamBandi;   durum = "mudahale + telefon"; }
+            else if (IsMudahaleEtti || IsTelefonEdildi)  { bant = tahliyeKismiBandi; durum = IsMudahaleEtti ? "sadece mudahale" : "sadece telefon"; }
+            else                                         { bant = tahliyePasifBandi; durum = "pasif"; }
+
+            KnnDangerZoneSystem knn = KnnDangerZoneSystem.Instance;
+            float konumPuani = knn != null ? knn.LocationScore : 0f;
+            float konumMax = knn != null ? knn.maxPenalty : 0f;
+            float basari = konumMax > 0f ? Mathf.Clamp01(konumPuani / konumMax) : 1f;
+            int tahliyePuani = Mathf.RoundToInt(Mathf.Lerp(bant.x, bant.y, basari));
+
+            Debug.Log($"[TAHLIYE] Durum: {durum} (sondurulen: {SondurulenAtesSayisi}, sikma: {ToplamSikmaSuresi:F1} sn, telefon: {IsTelefonEdildi}) " +
+                      $"| konum: {konumPuani:F0}/{konumMax:F0} | basari: {basari:F2} -> puan: {tahliyePuani}");
+            ScoreManager.Instance.PuanAyarla(tahliyePuani);
         }
     }

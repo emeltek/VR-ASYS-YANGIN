@@ -29,10 +29,8 @@ public class SafeZone : MonoBehaviour
                     audio.PlayOneShot(charaterRunFire);
                 }
 
-                YanginDurumYonetici.Instance.SimulasyonuBitir(true, "Doğru Karar! Kontrolden çıkan yangından başarıyla tahliye oldunuz.");
-                
-                if (ScoreManager.Instance != null)
-                    ScoreManager.Instance.PuanDus(40);
+                // Puan SimulasyonuBitir içinde Orta Riskli bandına (60-79) göre verilir
+                YanginDurumYonetici.Instance.SimulasyonuBitir(true, "Doğru Karar! Kontrolden çıkan yangından başarıyla tahliye oldunuz.", false, true);
             }
             else
             {

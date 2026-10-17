@@ -12,8 +12,8 @@ PlayerSettings:
   targetDevice: 2
   useOnDemandResources: 0
   accelerometerFrequency: 60
-  companyName: DefaultCompany
-  productName: VR-ASYS-YANGIN
+  companyName: EMELTEK
+  productName: VR-ASYS-YANGIN-KNN
   defaultCursor: {fileID: 0}
   cursorHotspot: {x: 0, y: 0}
   m_SplashScreenBackgroundColor: {r: 0.13725491, g: 0.12156863, b: 0.1254902, a: 1}
@@ -143,6 +143,8 @@ PlayerSettings:
   bundleVersion: 0.1
   preloadedAssets:
   - {fileID: 11400000, guid: ae21054344da4e64496e603be5a493c0, type: 2}
+  - {fileID: 2876250411554551376, guid: 14448b82e7eb6e54d8c23c1c7bee9612, type: 2}
+  - {fileID: -3600603817261042392, guid: c39cc2c0a7c50474e8efe6604e04f072, type: 2}
   metroInputSource: 0
   wsaTransparentSwapchain: 0
   m_HolographicPauseOnTrackingLoss: 1
@@ -162,7 +164,8 @@ PlayerSettings:
   resetResolutionOnWindowResize: 0
   androidSupportedAspectRatio: 1
   androidMaxAspectRatio: 2.1
-  applicationIdentifier: {}
+  applicationIdentifier:
+    Android: com.EMELTEK.VRASYSYANGINKNN
   buildNumber:
     Standalone: 0
     VisionOS: 0
